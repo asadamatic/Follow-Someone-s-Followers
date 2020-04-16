@@ -10,6 +10,8 @@ import sys
 import time
 import si_to_int
 
+
+notToFollow = [''] #users not to be followed
 option = Options()
 
 #Adding attributes to the browser to be openned
@@ -23,6 +25,8 @@ option.add_experimental_option('prefs', { 'profile.default_content_setting_value
 
 print('Provide your login credentials!')
 username = input('Enter your username: ')
+
+
 password = getpass()
 targetUsername = input("Enter your Target's Username here: ")
 
@@ -151,12 +155,12 @@ try:
 
     followersPopup = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, "//div[@class='isgrP']")))
 
-    for followedCheck in range(1, followers):
+    for followedCheck in range(1, 150):
         
         try:
 
             #Changing xpath for 'followButton' and 'usernameFollowed' after scroll 
-            if followedCheck <= 7:
+            if followedCheck <= 6:
 
                 followButton = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, '/html/body/div[4]/div/div[2]/ul/div/li[{}]/div/div[3]/button'.format(followedCheck))))
                 
@@ -169,13 +173,33 @@ try:
                 usernameFollowed = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, '/html/body/div[4]/div/div[2]/ul/div/li[{}]/div/div[1]/div[2]/div[1]/a'.format(followedCheck))))
             
 
+            
 
             #Keeping a check if the button says 'Follow' not to 'unfollow'
             if followButton.text == 'Follow':    
 
-                followButton.click()
+                if usernameFollowed.text in notToFollow:
 
-                time.sleep(5)
+                    pass
+                
+                else:
+
+                    followButton.click()
+
+                    time.sleep(5)
+
+                try:
+
+                    actionBlocked = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, '/html/body/div[5]/div/div/div[2]/button[2]')))
+                    actionBlocked.click()
+
+                    print('Action blocked by instagram :(')
+
+                    break
+
+                except NoSuchElementException:
+
+                    pass
 
                 #Detecting if Instagram is blocking more follows
                 if followButton.text == 'Following' or followButton.text == 'Requested':
@@ -196,7 +220,7 @@ try:
                                          
 
             #Scrolling on Followers popup after unfollowing 7 users every time
-            if followedCheck % 7 == 0:  
+            if followedCheck % 6 == 0:  
                 browser.execute_script('arguments[0].scrollTop = arguments[0].scrollTop + arguments[0].offsetHeight;', followersPopup)
                 print('Scrolling...')
                 time.sleep(2)
